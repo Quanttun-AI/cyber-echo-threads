@@ -1,298 +1,254 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Avatar } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, MoreHorizontal, Send, Mic, Image } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Send, User, Phone, Video } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
-// Sample conversations data
-const conversationsData = [
-  {
-    id: '1',
-    username: 'Neural_Ghost',
-    displayName: 'Neural Ghost',
-    avatar: 'https://i.pravatar.cc/150?img=33',
-    lastMessage: 'What do you think about the latest neural interface developments?',
-    timestamp: '10:42',
-    unread: 2,
-    online: true
-  },
-  {
-    id: '2',
-    username: 'Cyber_Shaman',
-    displayName: 'Cyber Shaman',
-    avatar: 'https://i.pravatar.cc/150?img=68',
-    lastMessage: 'I found a new way to visualize consciousness patterns.',
-    timestamp: '09:15',
-    unread: 0,
-    online: false
-  },
-  {
-    id: '3',
-    username: 'Neon_Priestess',
-    displayName: 'Neon Priestess',
-    avatar: 'https://i.pravatar.cc/150?img=5',
-    lastMessage: 'The research paper you sent was fascinating.',
-    timestamp: 'Yesterday',
-    unread: 0,
-    online: true
-  },
-  {
-    id: '4',
-    username: 'Quantum_Drift',
-    displayName: 'Quantum Drift',
-    avatar: 'https://i.pravatar.cc/150?img=15',
-    lastMessage: 'Let me know when you've tested the encryption protocol.',
-    timestamp: 'Yesterday',
-    unread: 0,
-    online: false
-  }
-];
+interface Message {
+  id: string;
+  senderId: string;
+  text: string;
+  timestamp: Date;
+  isOwn: boolean;
+}
 
-// Sample message history for Neural_Ghost
-const messageHistoryData = {
-  '1': [
-    {
-      id: 'm1',
-      sender: 'Neural_Ghost',
-      content: 'Hey, have you seen the latest developments in neural interface technology?',
-      timestamp: 'Yesterday, 19:32'
-    },
-    {
-      id: 'm2',
-      sender: 'user',
-      content: 'I've been following some research papers. Which ones are you referring to?',
-      timestamp: 'Yesterday, 20:15'
-    },
-    {
-      id: 'm3',
-      sender: 'Neural_Ghost',
-      content: 'The new non-invasive interfaces that can read detailed neural patterns without surgery.',
-      timestamp: 'Yesterday, 20:18'
-    },
-    {
-      id: 'm4',
-      sender: 'user',
-      content: 'Oh yes! The quantum sensor arrays. Really promising for accessibility.',
-      timestamp: 'Yesterday, 20:22'
-    },
-    {
-      id: 'm5',
-      sender: 'Neural_Ghost',
-      content: 'Exactly! What do you think about the potential for direct thought-to-text applications?',
-      timestamp: 'Today, 10:42'
-    },
-    {
-      id: 'm6',
-      sender: 'Neural_Ghost',
-      content: 'I'm working on a prototype that could transform how we interact with our devices.',
-      timestamp: 'Today, 10:42'
-    }
-  ]
-};
+interface Contact {
+  id: string;
+  name: string;
+  avatar: string;
+  lastMessage: string;
+  lastActive: string;
+  isOnline: boolean;
+}
 
 const Messages = () => {
   const { t } = useLanguage();
   const { userId } = useParams();
-  const [message, setMessage] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [currentMessage, setCurrentMessage] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [activeContact, setActiveContact] = useState<Contact | null>(null);
 
-  // Filter conversations based on search query
-  const filteredConversations = conversationsData.filter(
-    (convo) =>
-      convo.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      convo.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Mock data for contacts
+  useEffect(() => {
+    // In a real app, this would come from an API
+    const mockContacts: Contact[] = [
+      {
+        id: "user1",
+        name: "Raven_Digitalis",
+        avatar: "/placeholder.svg",
+        lastMessage: "Você viu aquele novo implante neural?",
+        lastActive: "2 min",
+        isOnline: true
+      },
+      {
+        id: "user2",
+        name: "Chrome_Edge",
+        avatar: "/placeholder.svg",
+        lastMessage: "A corporação está monitorando...",
+        lastActive: "1h",
+        isOnline: true
+      },
+      {
+        id: "user3",
+        name: "NeonBlade",
+        avatar: "/placeholder.svg",
+        lastMessage: "Tenho informações sobre aquele código",
+        lastActive: "5h",
+        isOnline: false
+      }
+    ];
+    
+    setContacts(mockContacts);
 
-  // Get selected conversation
-  const selectedConversation = userId
-    ? conversationsData.find((convo) => convo.id === userId)
-    : null;
+    // Set active contact based on URL param
+    if (userId) {
+      const found = mockContacts.find(c => c.id === userId);
+      if (found) setActiveContact(found);
+    } else if (mockContacts.length > 0) {
+      setActiveContact(mockContacts[0]);
+    }
+  }, [userId]);
 
-  // Get message history for selected conversation
-  const messageHistory = userId ? messageHistoryData[userId as keyof typeof messageHistoryData] || [] : [];
+  // Mock messages
+  useEffect(() => {
+    if (activeContact) {
+      const mockMessages: Message[] = [
+        {
+          id: "m1",
+          senderId: activeContact.id,
+          text: "Ei, você viu as últimas notícias sobre os implantes cerebrais?",
+          timestamp: new Date(Date.now() - 3600000),
+          isOwn: false
+        },
+        {
+          id: "m2",
+          senderId: "me",
+          text: "Sim, parece que a NetCorps finalmente conseguiu mapear as sinapses completas.",
+          timestamp: new Date(Date.now() - 3000000),
+          isOwn: true
+        },
+        {
+          id: "m3",
+          senderId: activeContact.id,
+          text: "Isso é insano! Você acha que vale a pena fazer o upgrade?",
+          timestamp: new Date(Date.now() - 2400000),
+          isOwn: false
+        },
+        {
+          id: "m4",
+          senderId: "me",
+          text: "Ainda estou pensando. O preço é alto, mas as vantagens parecem valer a pena. O que você pensa?",
+          timestamp: new Date(Date.now() - 1800000),
+          isOwn: true
+        }
+      ];
+      setMessages(mockMessages);
+    }
+  }, [activeContact]);
 
   const handleSendMessage = () => {
-    if (message.trim() === '') return;
-    console.log('Sending message:', message);
-    setMessage('');
+    if (!currentMessage.trim() || !activeContact) return;
+    
+    const newMessage: Message = {
+      id: `m${Date.now()}`,
+      senderId: "me",
+      text: currentMessage,
+      timestamp: new Date(),
+      isOwn: true
+    };
+    
+    setMessages([...messages, newMessage]);
+    setCurrentMessage('');
   };
 
   return (
-    <div className="flex h-[calc(100vh-16rem)]">
-      {/* Left sidebar - Conversations list */}
-      <div className="w-80 border-r border-cyber-purple/20 overflow-hidden flex flex-col">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-9rem)] gap-4">
+      {/* Contacts Sidebar */}
+      <div className="w-full md:w-80 border border-cyber-purple/20 rounded-lg bg-black/40 backdrop-blur-lg">
         <div className="p-4 border-b border-cyber-purple/20">
-          <h2 className="text-lg font-semibold mb-4">Messages</h2>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-cyber-purple/60" size={16} />
-            <Input
-              placeholder="Search conversations..."
-              className="pl-10 bg-black/30 border-cyber-purple/30 focus:border-cyber-purple/70"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <h2 className="text-xl font-orbitron text-cyber-purple">{t('messages')}</h2>
+        </div>
+        <ScrollArea className="h-[calc(100%-4rem)]">
+          <div className="p-2">
+            {contacts.map(contact => (
+              <div
+                key={contact.id}
+                onClick={() => setActiveContact(contact)}
+                className={`flex items-center gap-3 p-3 mb-2 rounded-md cursor-pointer transition-all ${activeContact?.id === contact.id 
+                  ? 'bg-cyber-purple/20 border border-cyber-purple/40' 
+                  : 'hover:bg-gray-900'}`}
+              >
+                <div className="relative">
+                  <Avatar>
+                    <AvatarImage src={contact.avatar} />
+                    <AvatarFallback>{contact.name[0]}</AvatarFallback>
+                  </Avatar>
+                  {contact.isOnline && (
+                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-cyber-green border-2 border-black"></span>
+                  )}
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <div className="flex justify-between">
+                    <span className="font-medium text-cyber-cyan">{contact.name}</span>
+                    <span className="text-xs text-gray-400">{contact.lastActive}</span>
+                  </div>
+                  <p className="text-xs text-gray-400 truncate">{contact.lastMessage}</p>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-
-        <div className="flex-1 overflow-auto">
-          {filteredConversations.map((convo) => (
-            <a
-              key={convo.id}
-              href={`/messages/${convo.id}`}
-              className={`flex items-center p-4 hover:bg-cyber-purple/10 transition-colors relative ${
-                userId === convo.id ? 'bg-cyber-purple/20' : ''
-              }`}
-            >
-              <div className="relative mr-3">
-                <Avatar className="h-12 w-12 border border-cyber-purple/40">
-                  <img src={convo.avatar} alt={convo.displayName} />
-                </Avatar>
-                {convo.online && (
-                  <div className="absolute bottom-0 right-0 w-3 h-3 bg-cyber-green rounded-full border border-black" />
-                )}
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-center">
-                  <div className="font-medium truncate">{convo.displayName}</div>
-                  <div className="text-xs text-gray-400">{convo.timestamp}</div>
-                </div>
-                <div className="text-sm text-gray-400 truncate">
-                  {convo.lastMessage}
-                </div>
-              </div>
-
-              {convo.unread > 0 && (
-                <div className="ml-2 bg-cyber-purple text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {convo.unread}
-                </div>
-              )}
-            </a>
-          ))}
-        </div>
+        </ScrollArea>
       </div>
 
-      {/* Right side - Messages or placeholder */}
-      <div className="flex-1 flex flex-col">
-        {selectedConversation ? (
-          <>
-            {/* Conversation header */}
-            <div className="p-4 border-b border-cyber-purple/20 flex items-center justify-between">
-              <div className="flex items-center">
-                <Avatar className="h-10 w-10 mr-3 border border-cyber-purple/40">
-                  <img src={selectedConversation.avatar} alt={selectedConversation.displayName} />
-                </Avatar>
-                <div>
-                  <div className="font-medium">{selectedConversation.displayName}</div>
-                  <div className="text-xs text-gray-400">@{selectedConversation.username}</div>
-                </div>
+      {/* Chat Area */}
+      {activeContact ? (
+        <div className="flex-1 flex flex-col border border-cyber-cyan/20 rounded-lg bg-black/40 backdrop-blur-lg overflow-hidden">
+          {/* Chat Header */}
+          <div className="p-4 border-b border-cyber-cyan/30 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Avatar>
+                <AvatarImage src={activeContact.avatar} />
+                <AvatarFallback>{activeContact.name[0]}</AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-medium text-cyber-cyan">{activeContact.name}</h3>
+                <span className="text-xs text-gray-400">
+                  {activeContact.isOnline ? t('online') : t('lastSeen') + ' ' + activeContact.lastActive}
+                </span>
               </div>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal size={20} />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="ghost" size="icon" className="text-cyber-cyan border border-cyber-cyan/30">
+                <Phone size={18} />
+              </Button>
+              <Button variant="ghost" size="icon" className="text-cyber-green border border-cyber-green/30">
+                <Video size={18} />
               </Button>
             </div>
-
-            {/* Messages */}
-            <div className="flex-1 p-4 overflow-auto">
-              <div className="space-y-4">
-                {/* Conversation starter */}
-                <div className="cyber-card p-4 mx-auto max-w-sm text-center">
-                  <div className="text-cyber-cyan font-mono text-sm mb-2">NEURAL LINK ESTABLISHED</div>
-                  <p>This is the beginning of your conversation with {selectedConversation.displayName}.</p>
-                </div>
-
-                {/* Message history */}
-                {messageHistory.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${
-                      msg.sender === 'user' ? 'justify-end' : 'justify-start'
+          </div>
+          
+          {/* Messages */}
+          <ScrollArea className="flex-1 p-4">
+            <div className="space-y-4">
+              <div className="text-center">
+                <span className="text-xs text-gray-500 bg-gray-900/50 px-3 py-1 rounded-full">
+                  {new Date().toLocaleDateString()}
+                </span>
+              </div>
+              
+              {messages.map(message => (
+                <div 
+                  key={message.id} 
+                  className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div 
+                    className={`max-w-[70%] p-3 rounded-lg ${
+                      message.isOwn
+                        ? 'bg-cyber-purple/20 border border-cyber-purple/40 text-white'
+                        : 'bg-gray-900/60 border border-gray-700/40 text-gray-300'
                     }`}
                   >
-                    <div
-                      className={`max-w-[70%] rounded-lg p-3 ${
-                        msg.sender === 'user'
-                          ? 'bg-cyber-purple/30 border border-cyber-purple/50'
-                          : 'bg-black/50 border border-cyber-cyan/30'
-                      }`}
-                    >
-                      <div className="text-sm">{msg.content}</div>
-                      <div
-                        className={`text-xs mt-1 ${
-                          msg.sender === 'user'
-                            ? 'text-cyber-purple/70 text-right'
-                            : 'text-cyber-cyan/70'
-                        }`}
-                      >
-                        {msg.timestamp}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Typing indicator */}
-                <div className="flex justify-start">
-                  <div className="bg-black/50 border border-cyber-cyan/30 rounded-lg p-3">
-                    <div className="flex space-x-2">
-                      <div className="w-2 h-2 rounded-full bg-cyber-cyan animate-ping" />
-                      <div className="w-2 h-2 rounded-full bg-cyber-cyan animate-ping delay-100" />
-                      <div className="w-2 h-2 rounded-full bg-cyber-cyan animate-ping delay-200" />
-                    </div>
+                    <p>{message.text}</p>
+                    <span className="text-xs text-gray-400 block text-right mt-1">
+                      {message.timestamp.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    </span>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-
-            {/* Message input */}
-            <div className="p-4 border-t border-cyber-purple/20">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="text-cyber-purple">
-                  <Image size={20} />
-                </Button>
-                <Button variant="ghost" size="icon" className="text-cyber-purple">
-                  <Mic size={20} />
-                </Button>
-                <div className="flex-1 relative">
-                  <Input
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Write a message..."
-                    className="bg-black/30 border-cyber-purple/30 focus:border-cyber-purple/70 pr-12"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSendMessage();
-                      }
-                    }}
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!message.trim()}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0 bg-cyber-purple hover:bg-cyber-purple/80"
-                  >
-                    <Send size={16} />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="cyber-card p-8 text-center max-w-md">
-              <div className="text-6xl mb-4">💬</div>
-              <h3 className="text-xl font-bold mb-2">Your Messages</h3>
-              <p className="text-gray-400 mb-6">
-                Select a conversation or start a new one to send messages to other users.
-              </p>
-              <Button className="bg-cyber-cyan hover:bg-cyber-cyan/80 text-black">
-                Start New Conversation
-              </Button>
-            </div>
+          </ScrollArea>
+          
+          {/* Input Area */}
+          <div className="p-4 border-t border-cyber-cyan/30 flex gap-2">
+            <Input
+              value={currentMessage}
+              onChange={(e) => setCurrentMessage(e.target.value)}
+              placeholder={t('typeMessage')}
+              className="bg-black/50 border-cyber-cyan/30 focus:border-cyber-cyan/70"
+              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+            />
+            <Button 
+              onClick={handleSendMessage}
+              className="bg-cyber-cyan hover:bg-cyber-cyan/90"
+            >
+              <Send size={18} />
+            </Button>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="flex-1 flex items-center justify-center border border-gray-800 rounded-lg bg-black/40">
+          <div className="text-center p-6">
+            <User size={48} className="mx-auto mb-4 text-gray-600" />
+            <h3 className="text-xl text-gray-400 font-orbitron">{t('selectContact')}</h3>
+            <p className="text-gray-500 mt-2">{t('selectContactDesc')}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
