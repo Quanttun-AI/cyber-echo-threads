@@ -126,6 +126,7 @@ const Messages = () => {
     setCurrentMessage('');
   };
 
+  // Fixed avatar paths to work with GitHub Pages relative URLs
   return (
     <div className="flex flex-col md:flex-row h-[calc(100vh-9rem)] gap-4">
       {/* Contacts Sidebar */}
@@ -145,7 +146,7 @@ const Messages = () => {
               >
                 <div className="relative">
                   <Avatar>
-                    <AvatarImage src={contact.avatar} />
+                    <AvatarImage src={contact.avatar.startsWith('/') ? `.${contact.avatar}` : contact.avatar} />
                     <AvatarFallback>{contact.name[0]}</AvatarFallback>
                   </Avatar>
                   {contact.isOnline && (
@@ -172,7 +173,7 @@ const Messages = () => {
           <div className="p-4 border-b border-cyber-cyan/30 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Avatar>
-                <AvatarImage src={activeContact.avatar} />
+                <AvatarImage src={activeContact.avatar.startsWith('/') ? `.${activeContact.avatar}` : activeContact.avatar} />
                 <AvatarFallback>{activeContact.name[0]}</AvatarFallback>
               </Avatar>
               <div>
